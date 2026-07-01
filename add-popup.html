@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>어디가 — 팝업 추가·관리</title>
+<meta name="robots" content="noindex" />
+<style>
+  :root {
+    --bg:#0f1115; --card:#1a1d24; --card2:#20242d; --line:#2a2f3a;
+    --text:#eef1f6; --sub:#9aa3b2; --accent:#6c8cff; --popup:#c06cff; --danger:#ff5a78;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","맑은 고딕",sans-serif; line-height:1.5; }
+  .wrap { max-width:620px; margin:0 auto; padding:20px 16px 80px; }
+  h1 { font-size:20px; margin:4px 0 2px; }
+  .sub { color:var(--sub); font-size:13px; margin:0 0 18px; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:16px; }
+  label { display:block; font-size:12px; color:var(--sub); margin:10px 0 4px; }
+  input[type=text], input[type=date], textarea {
+    width:100%; background:var(--card2); border:1px solid var(--line); border-radius:9px;
+    color:var(--text); font-size:15px; padding:10px 11px; outline:none; font-family:inherit; }
+  textarea { resize:vertical; min-height:54px; }
+  .row { display:flex; gap:10px; }
+  .row > div { flex:1; }
+  .chk { display:flex; align-items:center; gap:7px; margin-top:10px; color:var(--sub); font-size:13px; cursor:pointer; }
+  .chk input { width:16px; height:16px; }
+  .btn { border:none; border-radius:10px; font-size:14px; font-weight:700; padding:12px 16px; cursor:pointer; }
+  .btn-add { background:var(--accent); color:#fff; width:100%; margin-top:14px; }
+  .pv { display:flex; gap:6px; margin:6px 0; align-items:center; }
+  .pv input { flex:1; min-width:0; font-size:13px; padding:7px 8px; background:var(--card2); border:1px solid var(--line); border-radius:8px; color:var(--text); }
+  .pv input.d { flex:0 0 130px; }
+  .pv .del { flex:0 0 auto; width:30px; height:30px; }
+  .btn-copy { background:var(--popup); color:#fff; }
+  .btn-dl { background:var(--card2); color:var(--text); border:1px solid var(--line); }
+  .btn:active { transform:scale(.98); }
+  .hint { font-size:11px; color:#6b7383; margin-top:4px; }
+  .adv summary { cursor:pointer; color:var(--sub); font-size:13px; margin-top:12px; }
+  .item { display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .item:last-child { border-bottom:none; }
+  .item .body { flex:1; min-width:0; }
+  .item .nm { font-size:15px; font-weight:600; }
+  .item .mt { font-size:12px; color:var(--sub); }
+  .item .badge { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px;
+    background:rgba(192,108,255,.16); color:var(--popup); margin-top:3px; }
+  .del { background:none; border:1px solid var(--line); color:var(--danger); border-radius:8px;
+    width:32px; height:32px; cursor:pointer; flex:0 0 auto; font-size:15px; }
+  .count { color:var(--sub); font-size:13px; margin:0 0 8px; }
+  .out { font-family:ui-monospace,Menlo,monospace; font-size:12px; min-height:120px; }
+  .actions { display:flex; gap:8px; margin-top:10px; }
+  .actions .btn { flex:1; }
+  .ok { color:#00c896; font-size:12px; margin-left:8px; }
+  .steps { font-size:13px; color:var(--sub); line-height:1.7; }
+  .steps b { color:var(--text); }
+  code { background:var(--card2); padding:1px 6px; border-radius:5px; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🛍️ 팝업 추가·관리</h1>
+  <p class="sub">폼에 입력 → 아래 JSON 복사 → GitHub <code>popups.json</code> 덮어쓰기. 끝.</p>
+
+  <!-- 입력 폼 -->
+  <div class="panel">
+    <label>이름 *</label>
+    <input id="f-name" type="text" placeholder="예: 무신사 성수 팝업스토어" />
+
+    <label>지역·주소 * <span class="hint">(시/도가 들어가면 지역 자동분류)</span></label>
+    <input id="f-area" type="text" placeholder="예: 서울 성동구 성수동" />
+
+    <div class="row">
+      <div>
+        <label>시작일</label>
+        <input id="f-start" type="date" />
+      </div>
+      <div>
+        <label>종료일</label>
+        <input id="f-end" type="date" />
+      </div>
+    </div>
+    <label class="chk"><input id="f-always" type="checkbox" /> 상시 운영(날짜 없음)</label>
+
+    <label>한 줄 설명</label>
+    <textarea id="f-desc" placeholder="예: 평일 한가, 주말 오후 대기 김. 실내라 비 와도 OK."></textarea>
+
+    <label>태그 <span class="hint">(쉼표 구분 — '팝업'은 자동 추가)</span></label>
+    <input id="f-tags" type="text" placeholder="예: 성수, 데이트, 쇼핑, 핫플" />
+
+    <label>이미지 URL (선택)</label>
+    <input id="f-img" type="text" placeholder="https://..." />
+
+    <details class="adv">
+      <summary>고급: 좌표 직접 입력 (선택)</summary>
+      <div class="row" style="margin-top:8px">
+        <div><label>위도(lat)</label><input id="f-lat" type="text" placeholder="37.5447" /></div>
+        <div><label>경도(lng)</label><input id="f-lng" type="text" placeholder="127.0557" /></div>
+      </div>
+      <p class="hint">비워도 길찾기는 이름·주소 검색으로 작동. 좌표 넣으면 '내 주변' 거리순에도 잡힘.<br/>
+        좌표 찾기: 카카오맵에서 장소 검색 → 공유 → URL의 숫자, 또는 그냥 비워둬도 OK.</p>
+    </details>
+
+    <button class="btn btn-add" id="add">+ 목록에 추가</button>
+  </div>
+
+  <!-- 팝플리 일괄 붙여넣기 -->
+  <div class="panel">
+    <label>📋 팝플리 목록 붙여넣기 <span class="hint">(여러 개 한 번에)</span></label>
+    <p class="hint">popply.co.kr/popup 목록을 드래그·복사해 아래에 붙여넣고 <b>분석</b> → 확인·수정 후 <b>모두 추가</b>. 이름·지역·날짜 자동 추출.</p>
+    <textarea id="bulk" placeholder="예)
+NCT WISH 팝업 서울 성동구 26.06.22 - 26.07.31
+헌터 팝업 서울 송파구 26.06.23 - 26.07.08"></textarea>
+    <button class="btn btn-add" id="parse" style="background:var(--popup)">🔍 분석</button>
+    <div id="preview"></div>
+  </div>
+
+  <!-- 현재 목록 -->
+  <div class="panel">
+    <p class="count" id="count">불러오는 중…</p>
+    <div id="list"></div>
+  </div>
+
+  <!-- 출력 -->
+  <div class="panel">
+    <label>popups.json 전체 <span class="ok" id="okmsg"></span></label>
+    <textarea id="out" class="out" readonly></textarea>
+    <div class="actions">
+      <button class="btn btn-copy" id="copy">📋 전체 복사</button>
+      <button class="btn btn-dl" id="dl">⬇ popups.json 다운로드</button>
+    </div>
+    <p class="steps" style="margin-top:14px">
+      <b>올리는 법:</b><br/>
+      1. 위 <b>📋 전체 복사</b> (또는 다운로드)<br/>
+      2. GitHub repo → <code>popups.json</code> 클릭 → ✏️ 편집<br/>
+      3. 전체 지우고 붙여넣기 → Commit<br/>
+      4. 1~2분 뒤 사이트에 반영
+    </p>
+  </div>
+</div>
+
+<script>
+let popups = [];
+const SIDO = ["서울","부산","대구","인천","광주","대전","울산","세종","경기","강원",
+  "충북","충남","전북","전남","경북","경남","제주",
+  "충청북","충청남","전라북","전라남","경상북","경상남"];
+const SHORT = { 충청북:"충북", 충청남:"충남", 전라북:"전북", 전라남:"전남", 경상북:"경북", 경상남:"경남" };
+function regionOf(area, tags) {
+  const hay = area + " " + (tags || []).join(" ");
+  for (const s of SIDO) if (hay.includes(s)) return SHORT[s] || s;
+  return "";
+}
+// YYYY-MM-DD → YYYY.MM.DD
+function dot(d) { return d ? d.replace(/-/g, ".") : ""; }
+function makeDate(start, end, always) {
+  if (always) return "상시";
+  const s = dot(start), e = dot(end);
+  if (s && e) return `${s}~${e.slice(5)}`;   // 2026.07.01~07.20  (앱의 날짜 포맷과 동일)
+  return s || e || "상시";
+}
+
+const $ = id => document.getElementById(id);
+
+function refresh() {
+  $("count").textContent = `현재 팝업 ${popups.length}개`;
+  $("list").innerHTML = popups.length ? popups.map((p, i) => `
+    <div class="item">
+      <div class="body">
+        <div class="nm">${esc(p.name)}</div>
+        <div class="mt">📍 ${esc(p.area || "")} · 🗓️ ${esc(p.date || "상시")}</div>
+        <span class="badge">팝업</span>
+      </div>
+      <button class="del" data-i="${i}" title="삭제">✕</button>
+    </div>`).join("") : `<p class="mt" style="color:var(--sub)">아직 없음. 위에서 추가해봐.</p>`;
+  $("out").value = JSON.stringify(popups, null, 2);
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c])); }
+
+$("add").addEventListener("click", () => {
+  const name = $("f-name").value.trim();
+  const area = $("f-area").value.trim();
+  if (!name) { alert("이름은 필수야."); return; }
+  if (!area) { alert("지역·주소는 필수야 (지역 분류·길찾기에 필요)."); return; }
+  const tagsRaw = $("f-tags").value.split(",").map(t => t.trim()).filter(Boolean);
+  const reg = regionOf(area, tagsRaw);
+  const tags = [...new Set([reg, "팝업", ...tagsRaw].filter(Boolean))];
+  const o = {
+    name, cat: "popup", area,
+    date: makeDate($("f-start").value, $("f-end").value, $("f-always").checked),
+    desc: $("f-desc").value.trim(),
+    tags
+  };
+  const lat = parseFloat($("f-lat").value), lng = parseFloat($("f-lng").value);
+  if (lat && lng) { o.lat = lat; o.lng = lng; }
+  const img = $("f-img").value.trim();
+  if (img) o.img = img;
+  popups.push(o);
+  refresh();
+  // 폼 비우기 (지역은 남겨두면 연속 입력 편함)
+  ["f-name","f-start","f-end","f-desc","f-tags","f-img","f-lat","f-lng"].forEach(id => $(id).value = "");
+  $("f-always").checked = false;
+  $("f-name").focus();
+  flash("추가됨 ✓");
+});
+
+$("list").addEventListener("click", e => {
+  const b = e.target.closest(".del");
+  if (!b) return;
+  if (confirm("이 팝업 삭제할까?")) { popups.splice(+b.dataset.i, 1); refresh(); }
+});
+
+$("copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText($("out").value); flash("복사됨 ✓"); }
+  catch (e) { $("out").select(); document.execCommand("copy"); flash("복사됨 ✓"); }
+});
+$("dl").addEventListener("click", () => {
+  const blob = new Blob([$("out").value], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "popups.json"; a.click();
+});
+function flash(msg) { const el = $("okmsg"); el.textContent = msg; setTimeout(() => el.textContent = "", 1800); }
+
+// ── 팝플리 목록 일괄 파싱 ──
+function escAttr(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+function parseBulk(raw) {
+  const out = [], re = /(\d{2})\.(\d{2})\.(\d{2})\s*[-~]\s*(\d{2})\.(\d{2})\.(\d{2})/g;
+  let last = 0, m;
+  while ((m = re.exec(raw))) {
+    let head = raw.slice(last, m.index).replace(/\s+/g, " ").trim();
+    last = re.lastIndex;
+    head = head.replace(/^(?:사전예약|오픈예정|진행중|종료|재오픈|D-\d+|\d+)\s*/, "").trim();
+    const rm = head.match(/(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)[가-힣]*\s*([가-힣]+(?:구|시|군))?\s*$/);
+    let name = head, area = "";
+    if (rm) { area = rm[0].trim(); name = head.slice(0, rm.index).trim(); }
+    if (!name) continue;
+    out.push({ name, area, date: `20${m[1]}.${m[2]}.${m[3]}~${m[5]}.${m[6]}` });
+  }
+  return out;
+}
+let parsed = [];
+function renderPreview() {
+  const p = $("preview");
+  if (!parsed.length) { p.innerHTML = ""; return; }
+  p.innerHTML = `<p class="hint" style="margin-top:12px">${parsed.length}개 인식 — 틀린 건 고치고 뺄 건 ✕</p>` +
+    parsed.map((r, i) => `<div class="pv" data-i="${i}">
+      <input data-f="name" value="${escAttr(r.name)}" placeholder="이름" />
+      <input data-f="area" value="${escAttr(r.area)}" placeholder="지역" />
+      <input class="d" data-f="date" value="${escAttr(r.date)}" placeholder="날짜" />
+      <button class="del pvdel" title="제외">✕</button>
+    </div>`).join("") +
+    `<button class="btn" id="addall" style="background:var(--accent);color:#fff;width:100%;margin-top:10px">⬇ ${parsed.length}개 모두 목록에 추가</button>`;
+}
+$("parse").addEventListener("click", () => {
+  parsed = parseBulk($("bulk").value);
+  if (!parsed.length) { alert("인식된 팝업이 없어. 날짜(26.06.22 - 26.07.31)가 포함된 팝플리 목록을 붙여넣었는지 확인해줘."); return; }
+  renderPreview();
+});
+$("preview").addEventListener("input", e => {
+  const row = e.target.closest(".pv"); if (!row) return;
+  parsed[+row.dataset.i][e.target.dataset.f] = e.target.value;
+});
+$("preview").addEventListener("click", e => {
+  if (e.target.closest(".pvdel")) { parsed.splice(+e.target.closest(".pv").dataset.i, 1); renderPreview(); return; }
+  if (e.target.id === "addall") {
+    let n = 0;
+    for (const r of parsed) {
+      const name = (r.name || "").trim(); if (!name) continue;
+      const area = (r.area || "").trim();
+      const reg = regionOf(area, []);
+      const tags = [...new Set([reg, "팝업"].filter(Boolean))];
+      popups.push({ name, cat: "popup", area, date: (r.date || "상시").trim(), desc: "", tags });
+      n++;
+    }
+    parsed = []; $("bulk").value = ""; renderPreview(); refresh(); flash(n + "개 추가됨 ✓");
+  }
+});
+
+// 기존 popups.json 불러와서 시작
+fetch("popups.json", { cache: "no-store" })
+  .then(r => r.ok ? r.json() : [])
+  .then(d => { popups = Array.isArray(d) ? d : []; refresh(); })
+  .catch(() => { popups = []; refresh(); });
+</script>
+</body>
+</html>
